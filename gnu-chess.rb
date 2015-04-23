@@ -1,32 +1,41 @@
 class GnuChess < Formula
-  homepage 'https://www.gnu.org/software/chess/'
-  url 'http://ftpmirror.gnu.org/chess/gnuchess-6.1.1.tar.gz'
-  mirror 'https://ftp.gnu.org/gnu/chess/gnuchess-6.1.1.tar.gz'
-  sha1 '12703cef3c111e5a56a7de8ff3804306927a820a'
+  homepage "https://www.gnu.org/software/chess/"
+  url "http://ftpmirror.gnu.org/chess/gnuchess-6.2.1.tar.gz"
+  mirror "https://ftp.gnu.org/gnu/chess/gnuchess-6.2.1.tar.gz"
+  sha256 "17caab725539447bcb17a14b17905242cbf287087e53a6777524feb7bbaeed06"
 
-  def install
-    # Opening book for gnuchess.  This can be put in the doc directory and the
-    # user can optionally add the opening book.  The README has details on
-    # adding the opening book.
-    book_url = "http://ftpmirror.gnu.org/chess/book_1.02.pgn.gz"
-    ohai "Downloading #{book_url}"
-    curl book_url, "-O"
+  option "with-book", "Download the opening book (~25MB)"
 
-    system "./configure", "--disable-debug", "--disable-dependency-tracking", "--prefix=#{prefix}"
-    system "make"
-    ENV.j1 # Prevents a "file already exists" warning
-    system "make install"
-    doc.install Dir['doc/*', 'TODO', 'book_1.02.pgn.gz', 'book']
+  resource "book" do
+    url "http://ftpmirror.gnu.org/chess/book_1.02.pgn.gz"
+    sha256 "deac77edb061a59249a19deb03da349cae051e52527a6cb5af808d9398d32d44"
   end
 
-  def caveats; <<-EOS.undent
-    The README file contains a manual for use:
-      #{doc}/README
+  def install
+    system "./configure", "--disable-debug",
+                          "--disable-dependency-tracking",
+                          "--prefix=#{prefix}"
+    system "make", "install"
+    doc.install Dir["doc/*"], "TODO", "README"
 
-    This formula also downloads the additional opening book.  The opening
-    book is a gzipped PGN file that can be added using gnuchess commands.
-    The book_*.pgn.gz file is located in the same directory as the README.
-    See the README for using the `book add' command.
+    if build.with? "book"
+      resource("book").stage do
+        doc.install "book_1.02.pgn"
+      end
+    end
+  end
+
+  if build.with? "book"
+    def caveats; <<-EOS.undent
+      This formula also downloads the additional opening book.  The
+      opening book is a PGN file located in #{doc} that can be added
+      using gnuchess commands.
     EOS
+    end
+  end
+
+  test do
+    assert_match version.to_s,
+                 shell_output("#{bin}/gnuchess --version")
   end
 end
