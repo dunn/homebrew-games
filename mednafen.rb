@@ -1,9 +1,7 @@
-require 'formula'
-
 class Mednafen < Formula
-  homepage 'http://mednafen.sourceforge.net/'
-  url 'https://downloads.sourceforge.net/project/mednafen/Mednafen/0.9.36.5/mednafen-0.9.36.5.tar.bz2'
-  sha1 '02d441e18083daa539f0193121ac760882be9d19'
+  homepage "http://mednafen.sourceforge.net/"
+  url "https://downloads.sourceforge.net/project/mednafen/Mednafen/0.9.38.4/mednafen-0.9.38.4.tar.bz2"
+  sha256 "3298e2d5c03efbe638c2a98bf74435e306768461c65d2bb9b9a95e99dc463105"
 
   bottle do
     root_url "https://downloads.sf.net/project/machomebrew/Bottles/games"
@@ -12,13 +10,15 @@ class Mednafen < Formula
     sha1 "09ade315444535e750cb204d0280c9c7d833f12a" => :mountain_lion
   end
 
-  depends_on 'pkg-config' => :build
-  depends_on 'sdl'
-  depends_on 'libcdio'
-  depends_on 'libsndfile'
+  depends_on "pkg-config" => :build
+  depends_on "sdl"
+  depends_on "libcdio"
+  depends_on "libsndfile"
 
   def install
-    system "./configure", "--prefix=#{prefix}", "--disable-dependency-tracking"
-    system "make install"
+    system "./configure", "--prefix=#{prefix}",
+                          "--disable-dependency-tracking",
+                          "--disable-silent-rules"
+    system "make", "install"
   end
 end
