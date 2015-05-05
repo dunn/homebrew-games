@@ -1,35 +1,21 @@
-require 'formula'
-
-# Copies the subversion clone to a subdirectory, preserving the .svn metadata
-# which is required for determining the release number.
-#
-class PuzzlesHeadDownloadStrategy < SubversionDownloadStrategy
-  def stage
-    safe_system 'cp', '-pR', "#{@clone}/", '.'
-  end
-end
-
 class Puzzles < Formula
-  homepage 'http://www.chiark.greenend.org.uk/~sgtatham/puzzles/'
-  url 'svn://svn.tartarus.org/sgt/puzzles@10107', :using => PuzzlesHeadDownloadStrategy
-  head 'svn://svn.tartarus.org/sgt/puzzles', :using => PuzzlesHeadDownloadStrategy
+  homepage "http://www.chiark.greenend.org.uk/~sgtatham/puzzles/"
+  url "https://mirrors.kernel.org/debian/pool/main/s/sgt-puzzles/sgt-puzzles_20140928.r10274.orig.tar.gz"
+  mirror "https://mirrors.ocf.berkeley.edu/debian/pool/main/s/sgt-puzzles/sgt-puzzles_20140928.r10274.orig.tar.gz"
+  sha256 "d8c61b29c4cb39d991e4440e411fd0d78f23fdf5fb96621b83ac34ab396823aa"
+  version "10274"
 
-  depends_on 'halibut'
+  head "git://git.tartarus.org/simon/puzzles.git"
+
+  depends_on "halibut"
 
   def install
-    ENV.deparallelize
-
     system "perl", "mkfiles.pl"
     system "make", "-d", "-f", "Makefile.osx", "all"
     prefix.install "Puzzles.app"
   end
 
-  def caveats; <<-EOS
-    Puzzles.app was installed in:
-      #{opt_prefix}
-
-    To symlink into ~/Applications, you can do:
-      brew linkapps
-    EOS
+  test do
+    File.executable? prefix/"Puzzles.app/Contents/MacOS/puzzles"
   end
 end
