@@ -1,10 +1,23 @@
 class Wesnoth < Formula
   desc "Single- and multi-player turn-based strategy game"
   homepage "http://www.wesnoth.org/"
-  url "https://downloads.sourceforge.net/project/wesnoth/wesnoth-1.12/wesnoth-1.12.4/wesnoth-1.12.4.tar.bz2"
-  sha256 "bf525060da4201f1e62f861ed021f13175766e074a8a490b995052453df51ea7"
 
-  head "https://github.com/wesnoth/wesnoth.git"
+  stable do
+    url "https://downloads.sourceforge.net/project/wesnoth/wesnoth-1.12/wesnoth-1.12.6/wesnoth-1.12.6.tar.bz2"
+    mirror "https://mirrors.ocf.berkeley.edu/debian/pool/main/w/wesnoth-1.12/wesnoth-1.12_1.12.6.orig.tar.bz2"
+    sha256 "a50f384cead15f68f31cfa1a311e76a12098428702cb674d3521eb169eb92e4e"
+
+    if OS.linux?
+      # On linux, x11 driver is needed by the windowing and clipboard code
+      depends_on "sdl" => "with-x11"
+    else
+      depends_on "sdl"
+    end
+    depends_on "sdl_image"
+    depends_on "sdl_mixer" => "with-libvorbis" # The music is in .ogg format
+    depends_on "sdl_net"
+    depends_on "sdl_ttf"
+  end
 
   bottle do
     sha256 "63250b3eefb3ff93eba14addee9acfb6980ba138b9033b824a14f5e2a3a5a4b0" => :yosemite
@@ -13,8 +26,32 @@ class Wesnoth < Formula
   end
 
   devel do
-    url "https://downloads.sourceforge.net/project/wesnoth/wesnoth/wesnoth-1.13.1/wesnoth-1.13.1.tar.bz2"
-    sha256 "4423645f58eae3a22cdb94736a20181fbb3c2de3de36e20a70084b15b20337f2"
+    url "https://downloads.sourceforge.net/project/wesnoth/wesnoth/wesnoth-1.13.6/wesnoth-1.13.6.tar.bz2"
+    sha256 "a10a193ef8bc9963b2e241826628a120bb7dda758eb2d25d9ad110ad4916937c"
+
+    if OS.linux?
+      # On linux, x11 driver is needed by the windowing and clipboard code
+      depends_on "sdl2" => "with-x11"
+    else
+      depends_on "sdl2"
+    end
+    depends_on "sdl2_image"
+    depends_on "sdl2_mixer" => "with-libvorbis" # The music is in .ogg format
+    depends_on "sdl2_ttf"
+  end
+
+  head do
+    url "https://github.com/wesnoth/wesnoth.git"
+
+    if OS.linux?
+      # On linux, x11 driver is needed by the windowing and clipboard code
+      depends_on "sdl2" => "with-x11"
+    else
+      depends_on "sdl2"
+    end
+    depends_on "sdl2_image"
+    depends_on "sdl2_mixer" => "with-libvorbis" # The music is in .ogg format
+    depends_on "sdl2_ttf"
   end
 
   option "with-ccache", "Speeds recompilation, convenient for beta testers"
@@ -30,24 +67,22 @@ class Wesnoth < Formula
   depends_on "cairo"
   depends_on "pango"
 
-  if OS.linux?
-    # On linux, x11 driver is needed by the windowing and clipboard code
-    depends_on "sdl" => "with-x11"
-  else
-    depends_on "sdl"
-  end
-  depends_on "sdl_image" # Must have png support
-  depends_on "sdl_mixer" => "with-libvorbis" # The music is in .ogg format
-  depends_on "sdl_net"
-  depends_on "sdl_ttf"
-
   def install
-    args = %W[prefix=#{prefix} docdir=#{doc} mandir=#{man} fifodir=#{var}/run/wesnothd gettextdir=#{Formula["gettext"].opt_prefix}]
-    args << "OS_ENV=true"
-    args << "install"
-    args << "wesnoth"
-    args << "wesnothd"
-    args << "-j#{ENV.make_jobs}"
+    inreplace "SConstruct", "Carbon", "Cocoa" if build.stable?
+
+    args = %W[
+      prefix=#{prefix}
+      docdir=#{doc}
+      mandir=#{man}
+      fifodir=#{var}/run/wesnothd
+      gettextdir=#{Formula["gettext"].opt_prefix}
+      OS_ENV=true
+      install
+      wesnoth
+      wesnothd
+      -j#{ENV.make_jobs}
+    ]
+
     args << "ccache=true" if build.with? "ccache"
     args << "build=debug" if build.with? "debug"
 
