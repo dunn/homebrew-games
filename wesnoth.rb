@@ -54,12 +54,10 @@ class Wesnoth < Formula
     depends_on "sdl2_ttf"
   end
 
-  option "with-ccache", "Speeds recompilation, convenient for beta testers"
   option "with-debug", "Build with debugging symbols"
 
-  depends_on "scons" => :build
+  depends_on "cmake" => :build
   depends_on "gettext" => :build
-  depends_on "ccache" => :optional
   depends_on "fribidi"
   depends_on "boost"
   depends_on "libpng"
@@ -68,25 +66,27 @@ class Wesnoth < Formula
   depends_on "pango"
 
   def install
-    inreplace "SConstruct", "Carbon", "Cocoa" if build.stable?
-
-    args = %W[
-      prefix=#{prefix}
-      docdir=#{doc}
-      mandir=#{man}
-      fifodir=#{var}/run/wesnothd
-      gettextdir=#{Formula["gettext"].opt_prefix}
-      OS_ENV=true
-      install
-      wesnoth
-      wesnothd
-      -j#{ENV.make_jobs}
+    args = std_cmake_args
+    args += %W[
+      -DFIFO_DIR=#{var}/run/wesnothd
     ]
 
-    args << "ccache=true" if build.with? "ccache"
-    args << "build=debug" if build.with? "debug"
+    if build.with? "debug"
+      args -= %w[
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_C_FLAGS_RELEASE=-DNDEBUG
+        -DCMAKE_CXX_FLAGS_RELEASE=-DNDEBUG
+      ]
+      args += %w[
+        -DCMAKE_BUILD_TYPE=Debug
+        -DDEBUG_OUTPUT=on
+      ]
+    end
 
-    scons *args
+    mkdir "build" do
+      system "cmake", "..", *args
+      system "make", "install"
+    end
   end
 
   test do
